@@ -10,7 +10,7 @@ cd indian_poker
 dotnet run -p IndianPoker.App/IndianPoker.App.csproj -- 5 3
 ```
 
-上記 `5 3` の部分には、それぞれ**カード枚数**、**プレイヤー人数**を指定してください。
+上記 `5 3` の部分には、それぞれ**カード枚数**、**プレイヤー人数**を指定してください。  
 （大きな数を指定すると計算時間がかかります）
 
 ```
@@ -41,7 +41,7 @@ dotnet run -p IndianPoker.App/IndianPoker.App.csproj -- <カード枚数> <プ�
 
 ### 例
 
-カード `{ 1, 2, 3, 4, 5 }`
+カード `{ 1, 2, 3, 4, 5 }`  
 プレイヤー `{ A, B, C }`
 
 - A=1, B=4, C=5 の場合
