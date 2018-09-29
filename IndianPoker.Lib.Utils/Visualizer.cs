@@ -4,12 +4,18 @@ using System.Text;
 
 namespace IndianPoker.Lib.Utils
 {
+    // ゲーム情報を可視化する
     public static class Visualizer
     {
+        // 与えられたゲーム情報を文字列に変換
+        // nameAndNumbers: プレイヤーとカードの組み合わせ列
+        // answers: Solverの生成した答え列
+        // return : 変換結果
         public static string ToString(IEnumerable<(string playerName, int cardNumber)> nameAndNumbers, IEnumerable<PlayerAnswer> answers)
         {
             var builder = new StringBuilder();
 
+            // プレイヤー・カード情報
             builder.Append("<");
 
             var nnCount = nameAndNumbers.Count();
@@ -26,6 +32,7 @@ namespace IndianPoker.Lib.Utils
             
             builder.Append("> ");
 
+            // 答え情報
             var ansCount = answers.Count();
 
             foreach (var (a, i) in answers.Select((a, i) => (a, i)))
@@ -38,6 +45,7 @@ namespace IndianPoker.Lib.Utils
                 }
             }
 
+            // 検証結果
             var validation = Validator.Validate(nameAndNumbers, answers);
             
             if (validation != null)

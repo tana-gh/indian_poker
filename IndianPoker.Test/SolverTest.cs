@@ -9,25 +9,23 @@ namespace IndianPoker.Test
     public class SolverTest
     {
         [Theory]
-        [MemberData(nameof(TestMain_Data), 8)]
+        [MemberData(nameof(TestMain_Data), 8)] // カード数 9 以上は計算時間が膨大となる
         public void TestMain(int cardCount, int playerCount)
         {
-            var allNumbers = Enumerable.Range(0, cardCount).ToArray();
+            var allNumbers = Enumerable.Range(1, cardCount).ToArray();
             var names      = PlayerNames.Generate(playerCount);
-            var combs      = Combination.Generate(allNumbers, playerCount);
 
-            foreach (var c in combs)
+            var perms = Combination.Generate(allNumbers, playerCount)
+                                   .SelectMany(x => Permutation.Generate(x))
+                                   .ToArray();
+
+            foreach (var p in perms)
             {
-                var perms = Permutation.Generate(c);
-
-                foreach (var p in perms)
-                {
-                    var solver  = new Solver(allNumbers, p, names);
-                    var answers = solver.Solve();
-                    
-                    var validation = Validator.Validate(solver.NameAndNumbers, answers);
-                    Assert.True(validation == null || validation.Value);
-                }
+                var solver  = new Solver(allNumbers, p, names);
+                var answers = solver.Solve();
+                
+                var validation = Validator.Validate(solver.NameAndNumbers, answers);
+                Assert.True(validation == null || validation.Value); // Infinite loop はチェック対象外
             }
         }
 

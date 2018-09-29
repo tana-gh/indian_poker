@@ -3,8 +3,13 @@ using System.Linq;
 
 namespace IndianPoker.Lib.Utils
 {
+    // Solverの結果を検証する
     public static class Validator
     {
+        // 与えられたプレイヤー・カード情報と比較し、答えが正しいか判定する
+        // nameAndNumbers: プレイヤーとカードの組み合わせ列
+        // answers: Solverの生成した答え列
+        // return : 検証結果（無限ループ時は null）
         public static bool? Validate(IEnumerable<(string playerName, int cardNumber)> nameAndNumbers, IEnumerable<PlayerAnswer> answers)
         {
             var lastAnswer = answers.Last();

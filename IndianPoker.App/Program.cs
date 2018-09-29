@@ -9,24 +9,29 @@ namespace IndianPoker.App
     {
         static void Main(string[] args)
         {
-            var cardCount   = 7;
-            var playerCount = 3;
-
-            var allNumbers = Enumerable.Range(0, cardCount).ToArray();
-            var names      = PlayerNames.Generate(playerCount);
-            var combs      = Combination.Generate(allNumbers, playerCount);
-
-            foreach (var c in combs)
+            if (args.Length != 2)
             {
-                var perms = Permutation.Generate(c);
+                Console.WriteLine("Usage: dotnet run -p <project> -- <card-count> <player-count>");
+                return;
+            }
 
-                foreach (var p in perms)
-                {
-                    var solver  = new Solver(allNumbers, p, names);
-                    var answers = solver.Solve();
-                    var result  = Visualizer.ToString(solver.NameAndNumbers, answers);
-                    Console.WriteLine(result);
-                }
+            var cardCount   = int.Parse(args[0]);
+            var playerCount = int.Parse(args[1]);
+
+            var allNumbers = Enumerable.Range(1, cardCount).ToArray();
+            var names      = PlayerNames.Generate(playerCount);
+            
+            var perms = Combination.Generate(allNumbers, playerCount)
+                                   .SelectMany(x => Permutation.Generate(x))
+                                   .OrderBy(x => x, PermutationComparer.Instance)
+                                   .ToArray();
+
+            foreach (var p in perms)
+            {
+                var solver  = new Solver(allNumbers, p, names);
+                var answers = solver.Solve();
+                var result  = Visualizer.ToString(solver.NameAndNumbers, answers);
+                Console.WriteLine(result);
             }
         }
     }

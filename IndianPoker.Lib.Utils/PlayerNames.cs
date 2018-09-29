@@ -5,6 +5,9 @@ namespace IndianPoker.Lib.Utils
 {
     public static class PlayerNames
     {
+        // プレイヤーの名前列を生成
+        // count : プレイヤーの人数
+        // return: 全プレイヤーの名前
         public static IEnumerable<string> Generate(int count)
         {
             return Enumerable.Range(0, count)
@@ -12,6 +15,7 @@ namespace IndianPoker.Lib.Utils
                              .ToArray();
         }
 
+        // 数値をアルファベット列に変換
         private static IEnumerable<char> _ToAlphabets(int n)
         {
             var c = _ToAlphabet(n % 26);
@@ -31,6 +35,7 @@ namespace IndianPoker.Lib.Utils
             yield return c;
         }
 
+        // 数値をアルファベットに変換
         private static char _ToAlphabet(int n)
         {
             return (char)('A' + n);
