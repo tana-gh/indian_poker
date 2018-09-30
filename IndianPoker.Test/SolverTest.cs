@@ -9,7 +9,7 @@ namespace IndianPoker.Test
     public class SolverTest
     {
         [Theory]
-        [MemberData(nameof(TestMain_Data), 8)] // カード数 9 以上は計算時間が膨大となる
+        [MemberData(nameof(TestMain_Data), 7)] // カード数 8 以上は計算時間が膨大となる
         public void TestMain(int cardCount, int playerCount)
         {
             var allNumbers = Enumerable.Range(1, cardCount).ToArray();
