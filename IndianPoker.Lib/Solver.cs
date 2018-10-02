@@ -18,6 +18,18 @@ namespace IndianPoker.Lib
         // playerNames: プレイヤーの名前列（与えられた順）
         public Solver(IEnumerable<int> allNumbers, IEnumerable<int> deckNumbers, IEnumerable<string> playerNames)
         {
+            var allCount    = allNumbers .Count();
+            var deckCount   = deckNumbers.Count();
+            var playerCount = playerNames.Count();
+
+            if (allCount    <  2 ||
+                playerCount <  2 ||
+                allCount    <  playerCount ||
+                deckCount   != playerCount)
+            {
+                throw new ArgumentException();
+            }
+
             var deck     = new _Deck(allNumbers, deckNumbers);
             var cards    = deck.DeckCards;
             var allCards = deck.SortedCards;
@@ -60,25 +72,17 @@ namespace IndianPoker.Lib
         // return: 答え列
         public IEnumerable<PlayerAnswer> Solve()
         {
-            var turnCount = _Players.Count() + 1; // プレイヤー数 + 1 ターン行なう
-            return _PlayAllTurns(turnCount).ToArray();
+            return _PlayAllTurns().ToArray();
         }
 
         // ゲームの進行
-        // turnCount: ゲームのターン数
         // return   : 答え列
-        private IEnumerable<PlayerAnswer> _PlayAllTurns(int turnCount)
+        private IEnumerable<PlayerAnswer> _PlayAllTurns()
         {
-            for (var i = 0; i < turnCount; i++)
+            for (;;)
             {
                 foreach (var p in _Players)
                 {
-                    // 最後のターンは、最後のプレイヤーの手番が無い
-                    if (i == turnCount - 1 && p == _Players.Last())
-                    {
-                        break;
-                    }
-
                     // 答えを宣言
                     var answer = p.SendAnswer();
 
@@ -97,9 +101,6 @@ namespace IndianPoker.Lib
                     }
                 }
             }
-
-            // 与えられたターン数が終了した場合は無限ループ
-            yield return new PlayerAnswer(null, AnswerValue.Infinite);
         }
     }
 }

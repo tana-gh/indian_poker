@@ -34,9 +34,6 @@ namespace IndianPoker.Lib
                 case AnswerValue.Max:
                     return $"{PlayerName}=>MAX";
 
-                case AnswerValue.Infinite:
-                    return "Infinite loop";
-
                 default:
                     return "";
             }

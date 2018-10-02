@@ -3,10 +3,14 @@ using System.Linq;
 
 namespace IndianPoker.Lib.Utils
 {
-    // 数列を比較する
+    // 数列の比較子
     public class PermutationComparer : IComparer<IEnumerable<int>>
     {
         public static PermutationComparer Instance { get; } = new PermutationComparer();
+
+        private PermutationComparer()
+        {
+        }
 
         public int Compare(IEnumerable<int> x, IEnumerable<int> y)
         {

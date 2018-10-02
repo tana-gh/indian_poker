@@ -45,15 +45,6 @@ namespace IndianPoker.Lib.Utils
                 }
             }
 
-            // 検証結果
-            var validation = Validator.Validate(nameAndNumbers, answers);
-            
-            if (validation != null)
-            {
-                var result = validation.Value ? "OK" : "NG";
-                builder.Append($" : {result}");
-            }
-
             return builder.ToString();
         }
     }

@@ -7,14 +7,20 @@
 ```
 git clone git@github.com:tana-gh/indian_poker.git
 cd indian_poker
-dotnet run -p IndianPoker.App/IndianPoker.App.csproj -- 5 3
+dotnet run -p IndianPoker.App.Multiple/IndianPoker.App.Multiple.csproj -- 5 3
 ```
 
 上記 `5 3` の部分には、それぞれ**カード枚数**、**プレイヤー人数**を指定してください。  
 （大きな数を指定すると計算時間がかかります）
 
 ```
-dotnet run -p IndianPoker.App/IndianPoker.App.csproj -- <カード枚数> <プレイヤー人数>
+dotnet run -p IndianPoker.App.Multiple/IndianPoker.App.Multiple.csproj -- <カード枚数> <プレイヤー人数>
+```
+
+配るカードを指定する場合はこちらです。
+
+```
+dotnet run -p IndianPoker.App.Single/IndianPoker.App.Single.csproj -- <カード枚数> <プレイヤー人数> <カード1> <カード2> ...
 ```
 
 ## 解決対象となる問題
@@ -38,7 +44,6 @@ dotnet run -p IndianPoker.App/IndianPoker.App.csproj -- <カード枚数> <プ�
     - 分からない「?」
   - 1人でも答えが分かったらゲーム終了。
   - プレイヤーは嘘をつかず、最善を尽くす。
-  - 無限ループになる可能性がある。
 
 ### 例
 

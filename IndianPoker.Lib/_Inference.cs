@@ -14,6 +14,15 @@ namespace IndianPoker.Lib
             Impossible // 可能性なし
         }
 
+        // 推論手法
+        private enum _InferenceStrategy
+        {
+            All,   // 全て
+            Lower, // 下部
+            Upper, // 上部
+            Edge   // 両端
+        }
+
         // 推論に必要なカードの情報
         private struct _CardInfo
         {
@@ -45,9 +54,6 @@ namespace IndianPoker.Lib
         // 現在の答え
         public PlayerAnswer Answer { get; set; }
 
-        // 推論情報の階層の深度
-        private int _Depth { get; }
-
         // 推論対象のプレイヤーの名前
         private string _PlayerName { get; }
 
@@ -63,44 +69,26 @@ namespace IndianPoker.Lib
         // allCards    : 全カード列
         public _Inference(string playerName, IEnumerable<_VisibleCard> visibleCards, IEnumerable<_Card> allCards)
         {
-            _Depth = 0;
-
             _PlayerName = playerName;
             _Table      = _CreateTable(visibleCards, allCards);
-
-            var answer = _GetAnswer();
-            _Children  = _CreateInferences(answer).ToArray();
+            _Children   = _CreateChildren(_InferenceStrategy.All);
             
-            // 現在の答えは、未更新のため上記 answer とはせず、Unknown とする
+            // 現在の答えは、未更新のため Unknown とする
             Answer = new PlayerAnswer(playerName, AnswerValue.Unknown);
         }
 
         // 子要素を生成する、プライベートコンストラクタ
         // playerName: 推論対象のプレイヤーの名前
-        // table: 推論テーブル
-        // depth: 推論情報の階層の深度
-        private _Inference(string playerName, _CardInfo[] table, int depth)
+        // table     : 推論テーブル
+        // strategy  : 推論手法
+        private _Inference(string playerName, _CardInfo[] table, _InferenceStrategy strategy)
         {
-            _Depth = depth;
-
             _PlayerName = playerName;
             _Table      = table;
+            _Children   = _CreateChildren(strategy);
 
-            if (depth <= table.Count(x => x.Value == _InferenceValue.Used))
-            {
-                // 深度が全プレイヤー数未満（他プレイヤー数以下）の場合、子を生成
-                var answer = _GetAnswer();
-                _Children  = _CreateInferences(answer).ToArray();
-
-                // 現在の答えは、未更新のため上記 answer とはせず、Unknown とする
-                Answer = new PlayerAnswer(playerName, AnswerValue.Unknown);
-            }
-            else
-            {
-                // 深度が全プレイヤー数の場合、子は生成しない
-                Answer    = new PlayerAnswer(playerName, AnswerValue.Infinite);
-                _Children = new _Inference[0];
-            }
+            // 現在の答えは、未更新のため Unknown とする
+            Answer = new PlayerAnswer(playerName, AnswerValue.Unknown);
         }
 
         // 推論テーブルを生成
@@ -119,6 +107,23 @@ namespace IndianPoker.Lib
         // return: 答え
         private PlayerAnswer _GetAnswer()
         {
+            // 候補が 1 つだけだったら確定
+            if (_Table.Count(x => x.Value == _InferenceValue.Available) == 1)
+            {
+                if (_Table.SkipWhile(x => x.Value == _InferenceValue.Impossible).First().Value == _InferenceValue.Available)
+                {
+                    return  new PlayerAnswer(_PlayerName, AnswerValue.Min);
+                }
+                else if (_Table.Reverse().SkipWhile(x => x.Value == _InferenceValue.Impossible).First().Value == _InferenceValue.Available)
+                {
+                    return  new PlayerAnswer(_PlayerName, AnswerValue.Max);
+                }
+                else
+                {
+                    return  new PlayerAnswer(_PlayerName, AnswerValue.Mid);
+                }
+            }
+
             var count = _Table.Count();
 
             // テーブル上下の Available または Impossible
@@ -133,11 +138,11 @@ namespace IndianPoker.Lib
             var lowers_isUsed = lowers_used.Any(x => x.Value == _InferenceValue.Used);
             var uppers_isUsed = uppers_used.Any(x => x.Value == _InferenceValue.Used);
 
-            if (lowers_available.Count() + uppers_used.Count() == count)
+            if (lowers_available.Count() + uppers_used.Count() >= count)
             {
                 return new PlayerAnswer(_PlayerName, AnswerValue.Min);
             }
-            else if (lowers_used.Count() + uppers_available.Count() == count)
+            else if (lowers_used.Count() + uppers_available.Count() >= count)
             {
                 return new PlayerAnswer(_PlayerName, AnswerValue.Max);
             }
@@ -151,37 +156,131 @@ namespace IndianPoker.Lib
             }
         }
 
-        // 推論を行ない、子要素列を生成する
-        // availables: 自分の位置の候補列
-        // used  : 子要素の対象プレイヤーのカード情報
-        // answer: 現在の推論テーブルの状態から得られる答え
-        // return: 推論結果の子要素列
-        private IEnumerable<_Inference> _CreateInferences(PlayerAnswer answer)
+        // 子要素列を生成する
+        // strategy: 推論手法
+        // return  : 推論結果の子要素列
+        private IEnumerable<_Inference> _CreateChildren(_InferenceStrategy strategy)
         {
             // 推論結果が確定していたら、子要素の推論はしない
-            if (answer.Value != AnswerValue.Unknown)
+            if (_GetAnswer().Value != AnswerValue.Unknown)
             {
-                yield break;
+                return new _Inference[0];
             }
 
-            // 各候補位置について、子要素を生成
-            foreach (var a in _Table.Where(x => x.Value == _InferenceValue.Available))
+            switch (strategy)
             {
-                foreach (var u in _Table.Where(x => x.Value == _InferenceValue.Used))
+                case _InferenceStrategy.All:
+                    return _CreateLowerInferences().Concat(_CreateUpperInferences())
+                                                   .Concat(_CreateLowerEdgeInferences())
+                                                   .Concat(_CreateUpperEdgeInferences())
+                                                   .ToArray();
+
+                case _InferenceStrategy.Lower:
+                    return _CreateLowerInferences().Concat(_CreateLowerEdgeInferences())
+                                                   .Concat(_CreateUpperEdgeInferences())
+                                                   .ToArray();
+
+                case _InferenceStrategy.Upper:
+                    return _CreateUpperInferences().Concat(_CreateLowerEdgeInferences())
+                                                   .Concat(_CreateUpperEdgeInferences())
+                                                   .ToArray();
+
+                case _InferenceStrategy.Edge:
+                    return _CreateLowerEdgeInferences().Concat(_CreateUpperEdgeInferences())
+                                                       .ToArray();
+
+                default:
+                    return null;
+            }
+        }
+
+        // 推論テーブル下部に対し推論を行ない、子要素列を生成する
+        // return: 推論結果の子要素列
+        private IEnumerable<_Inference> _CreateLowerInferences()
+        {
+            // 下部の Available を取得
+            var availables = _Table.Reverse()
+                                   .SkipWhile(x => x.Value == _InferenceValue.Available)
+                                   .Where(x => x.Value == _InferenceValue.Available);
+
+            // 最大の Used
+            var useds = _Table.Where(x => x.Value == _InferenceValue.Used)
+                              .Reverse()
+                              .Take(1);
+
+            return _CreateInferences(availables, useds, _InferenceStrategy.Lower);
+        }
+
+        // 推論テーブル上部に対し推論を行ない、子要素列を生成する
+        // return: 推論結果の子要素列
+        private IEnumerable<_Inference> _CreateUpperInferences()
+        {
+            // 上部の Available を取得
+            var availables = _Table.SkipWhile(x => x.Value == _InferenceValue.Available)
+                                   .Where(x => x.Value == _InferenceValue.Available);
+
+            // 最小の Used
+            var useds = _Table.Where(x => x.Value == _InferenceValue.Used)
+                              .Take(1);
+
+            return _CreateInferences(availables, useds, _InferenceStrategy.Upper);
+        }
+
+        // 推論テーブル下端に対し推論を行ない、子要素列を生成する
+        // return: 推論結果の子要素列
+        private IEnumerable<_Inference> _CreateLowerEdgeInferences()
+        {
+            // 下端の Available を取得
+            var availables = _Table.TakeWhile(x => x.Value != _InferenceValue.Used)
+                                   .Where(x => x.Value == _InferenceValue.Available)
+                                   .Take(1);
+
+            // 上端以外の全 Used
+            var useds = _Table.Reverse()
+                              .SkipWhile(x => x.Value == _InferenceValue.Impossible)
+                              .Skip(1)
+                              .Where(x => x.Value == _InferenceValue.Used);
+
+            return _CreateInferences(availables, useds, _InferenceStrategy.Edge);
+        }
+
+        // 推論テーブル上端に対し推論を行ない、子要素列を生成する
+        // return  : 推論結果の子要素列
+        private IEnumerable<_Inference> _CreateUpperEdgeInferences()
+        {
+            // 上端の Available を取得
+            var availables = _Table.Reverse()
+                                   .TakeWhile(x => x.Value != _InferenceValue.Used)
+                                   .Where(x => x.Value == _InferenceValue.Available)
+                                   .Take(1);
+
+            // 下端以外の全 Used
+            var useds = _Table.SkipWhile(x => x.Value == _InferenceValue.Impossible)
+                              .Skip(1)
+                              .Where(x => x.Value == _InferenceValue.Used);
+
+            return _CreateInferences(availables, useds, _InferenceStrategy.Edge);
+        }
+
+        // 推論を行ない、子要素列を生成する
+        // availables: 自分の位置の候補列
+        // used      : 子要素の対象プレイヤーのカード情報
+        // strategy  : 推論手法
+        // return    : 推論結果の子要素列
+        private IEnumerable<_Inference> _CreateInferences(IEnumerable<_CardInfo> availables, IEnumerable<_CardInfo> useds, _InferenceStrategy strategy)
+        {
+            // 各候補について、子要素を生成
+            foreach (var a in availables)
+            {
+                foreach (var u in useds)
                 {
                     // 子要素用のテーブルを作成
                     var cloned = (_CardInfo[])_Table.Clone();
 
                     _SetTableValue(cloned, a.Index, _PlayerName, _InferenceValue.Used);  // 候補位置に自分を置く
-                    _SetTableValue(cloned, u.Index, null, _InferenceValue.Available); // 子要素の対象プレイヤー位置を取得可能にする
+                    _SetTableValue(cloned, u.Index, null, _InferenceValue.Available);    // 子要素の対象プレイヤー位置を取得可能にする
 
-                    // Impossible を取得可能にする
-                    foreach (var i in cloned.Where(x => x.Value == _InferenceValue.Impossible))
-                    {
-                        _SetTableValue(cloned, i.Index, null, _InferenceValue.Available);
-                    }
-
-                    yield return new _Inference(u.PlayerName, cloned, _Depth + 1);
+                    yield return new _Inference(u.PlayerName, cloned, strategy);
                 }
             }
         }
@@ -201,8 +300,8 @@ namespace IndianPoker.Lib
             {
                 c.Update(received); // 子要素の更新
 
-                // 答えが確定している場合（無限ループを除く）Impossible の設定
-                if (c.Answer.Value != AnswerValue.Unknown && c.Answer.Value != AnswerValue.Infinite)
+                // 答えが確定している場合 Impossible の設定
+                if (c.Answer.Value != AnswerValue.Unknown)
                 {
                     // 子要素の推論テーブル中にある自分の位置を、自分の推論テーブル上で Impossible とする
                     var me = c._Table.First(x => x.PlayerName == _PlayerName && x.Value == _InferenceValue.Used);

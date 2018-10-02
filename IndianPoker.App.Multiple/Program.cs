@@ -3,7 +3,7 @@ using System.Linq;
 using IndianPoker.Lib;
 using IndianPoker.Lib.Utils;
 
-namespace IndianPoker.App
+namespace IndianPoker.App.Multiple
 {
     class Program
     {
@@ -11,12 +11,23 @@ namespace IndianPoker.App
         {
             if (args.Length != 2)
             {
-                Console.WriteLine("Usage: dotnet run -p <project> -- <card-count> <player-count>");
+                _ShowUsage();
                 return;
             }
 
-            var cardCount   = int.Parse(args[0]);
-            var playerCount = int.Parse(args[1]);
+            int cardCount;
+            int playerCount;
+
+            try
+            {
+                cardCount   = int.Parse(args[0]);
+                playerCount = int.Parse(args[1]);
+            }
+            catch
+            {
+                _ShowUsage();
+                return;
+            }
 
             var allNumbers = Enumerable.Range(1, cardCount).ToArray();
             var names      = PlayerNames.Generate(playerCount);
@@ -33,6 +44,11 @@ namespace IndianPoker.App
                 var result  = Visualizer.ToString(solver.NameAndNumbers, answers);
                 Console.WriteLine(result);
             }
+        }
+
+        private static void _ShowUsage()
+        {
+            Console.WriteLine("Usage: dotnet run -p <project> -- <card-count> <player-count>");
         }
     }
 }

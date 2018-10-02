@@ -9,18 +9,14 @@ namespace IndianPoker.Lib.Utils
         // 与えられたプレイヤー・カード情報と比較し、答えが正しいか判定する
         // nameAndNumbers: プレイヤーとカードの組み合わせ列
         // answers: Solverの生成した答え列
-        // return : 検証結果（無限ループ時は null）
-        public static bool? Validate(IEnumerable<(string playerName, int cardNumber)> nameAndNumbers, IEnumerable<PlayerAnswer> answers)
+        // return : 検証結果
+        public static bool Validate(IEnumerable<(string playerName, int cardNumber)> nameAndNumbers, IEnumerable<PlayerAnswer> answers)
         {
             var lastAnswer = answers.Last();
             
             if (lastAnswer.Value == AnswerValue.Unknown)
             {
                 return false;
-            }
-            else if (lastAnswer.Value == AnswerValue.Infinite)
-            {
-                return null;
             }
 
             var validatee = nameAndNumbers.First(x => x.playerName == lastAnswer.PlayerName).cardNumber;
