@@ -13,6 +13,9 @@ namespace IndianPoker.Lib
         // プレイヤー列
         private IEnumerable<_Player> _Players { get; }
 
+        // プレイヤーの順序
+        private _PlayerOrder _Order { get; }
+
         // allNumbers : 全カードの数字列
         // deckNumbers: プレイヤーのドローするカードの数字列（与えられた順）
         // playerNames: プレイヤーの名前列（与えられた順）
@@ -29,6 +32,8 @@ namespace IndianPoker.Lib
             {
                 throw new ArgumentException();
             }
+
+            _Order = new _PlayerOrder(playerNames);
 
             var deck     = new _Deck(allNumbers, deckNumbers);
             var cards    = deck.DeckCards;
@@ -55,7 +60,7 @@ namespace IndianPoker.Lib
                 return playerNames.Zip(cards, (n, c) => (n, c))
                                   .Where(x => x.c != card)
                                   .Select(x => new _VisibleCard(x.n, x.c))
-                                  .OrderBy(x => x.Card.Number)
+                                  .OrderBy(x => x.PlayerName)
                                   .ToArray();
             }
 
@@ -64,7 +69,7 @@ namespace IndianPoker.Lib
             var nameAndCards = playerNames.Zip(visibleCards, (n, c) => (n, c));
 
             // プレイヤー列を生成
-            return nameAndCards.Select(x => new _Player(x.n, x.c, allCards))
+            return nameAndCards.Select(x => new _Player(x.n, x.c, allCards, _Order))
                                .ToArray();
         }
 
@@ -76,29 +81,24 @@ namespace IndianPoker.Lib
         }
 
         // ゲームの進行
-        // return   : 答え列
+        // return: 答え列
         private IEnumerable<PlayerAnswer> _PlayAllTurns()
         {
-            for (;;)
+            var playerNames = _Order.GetPlayerNames().Select((playerName, index) => (playerName, index));
+
+            foreach (var (playerName, index) in playerNames)
             {
-                foreach (var p in _Players)
+                var player = _Players.First(x => x.Name == playerName);
+
+                // 答えを宣言
+                var answer = player.SayAnswer(index);
+
+                yield return answer;
+
+                // Unknown以外の答えなら終了
+                if (answer.Value != AnswerValue.Unknown)
                 {
-                    // 答えを宣言
-                    var answer = p.SendAnswer();
-
-                    yield return answer;
-
-                    // Unknown以外の答えなら終了
-                    if (answer.Value != AnswerValue.Unknown)
-                    {
-                        yield break;
-                    }
-
-                    // 答えを他プレイヤーに送信
-                    foreach (var pp in _Players.Where(pp => pp != p))
-                    {
-                        pp.ReceiveAnswer(answer);
-                    }
+                    yield break;
                 }
             }
         }

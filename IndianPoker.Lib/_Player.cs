@@ -13,25 +13,18 @@ namespace IndianPoker.Lib
         // name: プレイヤーの名前
         // visibleCards: 他プレイヤーのカード
         // allCards    : 全カード
-        public _Player(string name, IEnumerable<_VisibleCard> visibleCards, IEnumerable<_Card> allCards)
+        // order       : プレイヤーの順序
+        public _Player(string name, IEnumerable<_VisibleCard> visibleCards, IEnumerable<_Card> allCards, _PlayerOrder order)
         {
-            Name = name;
-            
-            _Inference = new _Inference(name, visibleCards, allCards);
+            Name       = name;
+            _Inference = new _Inference(name, visibleCards, allCards, order);
         }
 
-        // 他プレイヤーの答えを受け取る
-        // answer: 受け取る答え
-        public void ReceiveAnswer(PlayerAnswer answer)
+        // 答えを宣言する
+        // orderIndex: _PlayerOrder上における現在の順番
+        public PlayerAnswer SayAnswer(int orderIndex)
         {
-            _Inference.Update(answer); // 推論情報の更新
-        }
-
-        // 自分の手番において答えを宣言する
-        public PlayerAnswer SendAnswer()
-        {
-            _Inference.Update(new PlayerAnswer(Name, AnswerValue.Unknown)); // 自分の手番で更新が必要
-            return _Inference.Answer;
+            return _Inference.Infer(orderIndex);
         }
     }
 }
