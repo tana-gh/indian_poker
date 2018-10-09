@@ -55,3 +55,8 @@ dotnet run -p IndianPoker.App.Single/IndianPoker.App.Single.csproj -- <カード
 
 - A=1, B=2, C=4 の場合
   - A=>?, B=>MID
+
+## 謝辞
+
+問題並びに解答の提供者である[@sumim](https://twitter.com/sumim)氏に感謝します。
+ありがとうございました。
