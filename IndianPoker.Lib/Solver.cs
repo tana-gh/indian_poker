@@ -13,7 +13,7 @@ namespace IndianPoker.Lib
         // プレイヤー列
         private IEnumerable<_Player> _Players { get; }
 
-        // プレイヤーの順序
+        // 手番の順序
         private _PlayerOrder _Order { get; }
 
         // allNumbers : 全カードの数字列

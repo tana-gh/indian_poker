@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace IndianPoker.Lib
 {
-    // プレイヤーの順序
+    // 手番の順序
     internal class _PlayerOrder
     {
         // 全プレイヤーの名前列
@@ -15,6 +15,7 @@ namespace IndianPoker.Lib
             _PlayerNames = playerNames;
         }
 
+        // 手番の順序を生成する
         // return: 順序付けられたプレイヤーの名前列
         public IEnumerable<string> GetPlayerNames()
         {

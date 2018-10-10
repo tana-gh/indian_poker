@@ -17,7 +17,7 @@ namespace IndianPoker.Test
         }
 
         [Theory]
-        [MemberData(nameof(Solver_Solve_Data), 8)] // カード数 9 以上は計算時間が膨大となる
+        [MemberData(nameof(Solver_Solve_Data), 9)] // カード数 10 以上は計算時間が膨大となる
         public void Solver_Solve(int cardCount, int playerCount)
         {
             var allNumbers = Enumerable.Range(1, cardCount).ToArray();

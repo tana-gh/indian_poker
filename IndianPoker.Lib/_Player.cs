@@ -7,13 +7,13 @@ namespace IndianPoker.Lib
         // プレイヤーの名前
         public string Name { get; }
         
-        // 推論情報
+        // 推論に関する情報
         private _Inference _Inference { get; }
 
         // name: プレイヤーの名前
         // visibleCards: 他プレイヤーのカード
         // allCards    : 全カード
-        // order       : プレイヤーの順序
+        // order       : 手番の順序
         public _Player(string name, IEnumerable<_VisibleCard> visibleCards, IEnumerable<_Card> allCards, _PlayerOrder order)
         {
             Name       = name;

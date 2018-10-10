@@ -58,7 +58,7 @@ namespace IndianPoker.Lib
         // 全カード列
         private IEnumerable<_Card> _AllCards { get; }
 
-        // プレイヤーの順序
+        // 手番の順序
         private _PlayerOrder _Order { get; }
 
         // _Inferメソッドのメモ
@@ -67,7 +67,7 @@ namespace IndianPoker.Lib
         // playerName  : 推論対象のプレイヤーの名前
         // visibleCards: プレイヤーに見えているカード列
         // allCards    : 全カード列
-        // order       : プレイヤーの順序
+        // order       : 手番の順序
         public _Inference(string playerName, IEnumerable<_VisibleCard> visibleCards, IEnumerable<_Card> allCards, _PlayerOrder order)
         {
             _PlayerName   = playerName;
@@ -91,9 +91,9 @@ namespace IndianPoker.Lib
         // visibleCards    : プレイヤーに見えているカード列
         // orderIndex      : _PlayerOrder上における現在の順番
         // return          : 答え
-        public PlayerAnswer _Infer(string targetPlayerName, IEnumerable<_VisibleCard> visibleCards, int orderIndex)
+        public PlayerAnswer _Infer(string targetPlayerName, IEnumerable<_VisibleCard> visibleCards, int limit)
         {
-            var memoKey = new _MemoKey(targetPlayerName, visibleCards, orderIndex);
+            var memoKey = new _MemoKey(targetPlayerName, visibleCards, limit);
 
             // メモより取得
             if (_Memo.ContainsKey(memoKey))
@@ -105,27 +105,33 @@ namespace IndianPoker.Lib
             var possibleCardList = _AllCards.Except(visibleCards.Select(x => x.Card))
                                             .ToList();
 
-            // 前の手番が存在するなら
-            if (orderIndex >= 1)
+            var playerNames = _Order.GetPlayerNames().Select((playerName, index) => (playerName, index));
+
+            foreach (var (playerName, index) in playerNames.Take(limit + 1))
             {
-                var prevOrderIndex = orderIndex - 1;
-                var prevPlayerName = _Order.GetPlayerNames().ElementAt(prevOrderIndex);
-
-                foreach (var p in possibleCardList.ToArray())
+                // 前の手番が存在するなら
+                if (index >= 1)
                 {
-                    // 前の手番を仮定する
-                    var candidates = visibleCards.Concat(new[] { new _VisibleCard(targetPlayerName, p) })
-                                                 .Where(x => x.PlayerName != prevPlayerName)
-                                                 .OrderBy(x => x.PlayerName)
-                                                 .ToArray();
-                    
-                    // 仮定を元に答えを導出する
-                    var inferred = _Infer(prevPlayerName, candidates, prevOrderIndex);
+                    var prevIndex = index - 1;
+                    var prevPlayerName = _Order.GetPlayerNames().ElementAt(prevIndex);
 
-                    // 答えの食い違い
-                    if (inferred.Value != AnswerValue.Unknown)
+                    // possibleCardListのクローンでループ
+                    foreach (var p in possibleCardList.ToArray())
                     {
-                        possibleCardList.Remove(p);
+                        // 前の手番を仮定する
+                        var candidates = visibleCards.Concat(new[] { new _VisibleCard(targetPlayerName, p) })
+                                                     .Where(x => x.PlayerName != prevPlayerName)
+                                                     .OrderBy(x => x.PlayerName)
+                                                     .ToArray();
+                        
+                        // 仮定を元に答えを導出する
+                        var inferred = _Infer(prevPlayerName, candidates, prevIndex);
+
+                        // 答えの食い違い
+                        if (inferred.Value != AnswerValue.Unknown)
+                        {
+                            possibleCardList.Remove(p);
+                        }
                     }
                 }
             }
